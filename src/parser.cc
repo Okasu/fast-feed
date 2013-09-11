@@ -96,13 +96,6 @@ void parseAtomFeed(xml_node<char> *feedNode, const Local<Object> &feed, bool ext
     while (itemNode) {
         Local<Object> item = Object::New();
 
-        // Extracts the id property.
-
-        char *id = readTextNode(itemNode, "id");
-        if (id) {
-            item->Set(String::NewSymbol("id"), String::New(id));
-        }
-
         // Extracts the link property.
 
         xml_node<char> *linkNode = itemNode->first_node("link");
@@ -137,6 +130,16 @@ void parseAtomFeed(xml_node<char> *feedNode, const Local<Object> &feed, bool ext
                 }
             }
         }
+
+        // Extracts the id property.
+
+        char *id = readTextNode(itemNode, "id");
+        if (id) {
+          item->Set(String::NewSymbol("id"), String::New(id));
+        } else if (item->Has(String::NewSymbol("link"))) {
+          item->Set(String::NewSymbol("id"), item->Get(String::NewSymbol("link")));
+        }
+
 
         // Extract the item title.
 
@@ -241,18 +244,20 @@ void parseRssFeed(xml_node<char> *rssNode, const Local<Object> &feed, bool extra
     while (itemNode) {
         Local<Object> item = Object::New();
 
-        // Extracts the guid property.
-
-        char *guid = readTextNode(itemNode, "guid");
-        if (guid) {
-            item->Set(String::NewSymbol("id"), String::New(guid));
-        }
-
         // Extracts the link property.
 
         char *link = readTextNode(itemNode, "link");
         if (link) {
             item->Set(String::NewSymbol("link"), String::New(link));
+        }
+
+        // Extracts the guid property.
+
+        char *guid = readTextNode(itemNode, "guid");
+        if (guid) {
+            item->Set(String::NewSymbol("id"), String::New(guid));
+        } else if (link) {
+          item->Set(String::NewSymbol("id"), item->Get(String::NewSymbol("link")));
         }
 
         // Extracts the pubDate property.
